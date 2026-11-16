@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Agent Says Done. But Is It Really Done?</title>
+  <script>
+    (() => {
+      const param = new URLSearchParams(window.location.search).get("scoutTheme");
+      const theme =
+        param || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <style>
+    :root {
+      color-scheme: light;
+      --cp-bg: #f7f4ef;
+      --cp-bg-elevated: #fcfbf8;
+      --cp-surface: #ffffff;
+      --cp-surface-soft: #f5f5f5;
+      --cp-border: #dedede;
+      --cp-border-strong: #919191;
+      --cp-text: #242424;
+      --cp-text-muted: #5c5c5c;
+      --cp-text-soft: #6f6f6f;
+      --cp-accent: #b11f4b;
+      --cp-accent-hover: #9a1a41;
+      --cp-accent-soft: rgba(177, 31, 75, 0.08);
+      --cp-accent-fg: #ffffff;
+      --cp-success: #16a34a;
+      --cp-danger: #dc2626;
+      --cp-warning: #f59e0b;
+      --cp-link: #0078d4;
+      --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.12);
+      --cp-overlay: rgba(255, 255, 255, 0.8);
+      --cp-panel: rgba(255, 255, 255, 0.86);
+      --cp-panel-strong: rgba(255, 255, 255, 0.96);
+      --cp-sheen: rgba(255, 255, 255, 0.55);
+      --cp-highlight: rgba(177, 31, 75, 0.12);
+    }
+    html[data-theme="dark"] {
+      color-scheme: dark;
+      --cp-bg: #3d3b3a;
+      --cp-bg-elevated: #343231;
+      --cp-surface: #292929;
+      --cp-surface-soft: #2e2e2e;
+      --cp-border: #474747;
+      --cp-border-strong: #5f5f5f;
+      --cp-text: #dedede;
+      --cp-text-muted: #919191;
+      --cp-text-soft: #b0b0b0;
+      --cp-accent: #fd8ea1;
+      --cp-accent-hover: #fb7b91;
+      --cp-accent-soft: rgba(253, 142, 161, 0.14);
+      --cp-accent-fg: #1a1a1a;
+      --cp-success: #4ade80;
+      --cp-danger: #f87171;
+      --cp-warning: #fbbf24;
+      --cp-link: #4da6ff;
+      --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.32);
+      --cp-overlay: rgba(41, 41, 41, 0.88);
+      --cp-panel: rgba(41, 41, 41, 0.72);
+      --cp-panel-strong: rgba(41, 41, 41, 0.96);
+      --cp-sheen: rgba(255, 255, 255, 0.04);
+      --cp-highlight: rgba(253, 142, 161, 0.12);
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--cp-bg); color: var(--cp-text);
+      font-family: "Segoe UI", Aptos, Calibri, -apple-system, BlinkMacSystemFont, sans-serif; }
+    main { max-width: 1280px; padding: 32px; margin: auto; }
+    h1 { font-size: 32px; margin: 8px 0; }
+    h2 { font-size: 20px; margin: 0 0 16px; }
+    p { line-height: 1.6; }
+    .eyebrow { color: var(--cp-accent); font-weight: 700; letter-spacing: 1px; }
+    .muted { color: var(--cp-text-muted); }
+    .card { border: 1px solid var(--cp-border); background: var(--cp-surface);
+      border-radius: 16px; padding: 24px; margin-top: 20px; }
+    .notice { background: var(--cp-accent-soft); border-left: 4px solid var(--cp-accent);
+      padding: 16px; border-radius: 0.625rem; }
+    .controls, .flow { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+    .flow span { border: 1px solid var(--cp-border); padding: 12px;
+      border-radius: 0.625rem; background: var(--cp-surface-soft); }
+    button, select { font: inherit; padding: 12px 16px; border-radius: 0.625rem;
+      border: 1px solid var(--cp-border-strong); background: var(--cp-surface); color: var(--cp-text); }
+    button { cursor: pointer; }
+    button.primary { background: var(--cp-accent); color: var(--cp-accent-fg); border-color: var(--cp-accent); }
+    button.primary:hover { background: var(--cp-accent-hover); }
+    button:disabled { opacity: 0.5; cursor: wait; }
+    button:focus-visible, select:focus-visible { outline: 3px solid var(--cp-link); outline-offset: 3px; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    pre { font-family: Consolas, "Courier New", Courier, monospace; font-size: 14px;
+      line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; padding: 16px;
+      background: var(--cp-surface-soft); border-radius: 0.625rem; margin: 0; }
+    .status { font-weight: 700; font-size: 24px; margin: 0; }
+    .success { color: var(--cp-success); }
+    .danger { color: var(--cp-danger); }
+    .trace { border-left: 3px solid var(--cp-border); padding-left: 16px; margin: 20px 0; }
+    .trace.pass { border-color: var(--cp-success); }
+    .trace.fail, .trace.blocked { border-color: var(--cp-danger); }
+    .trace.warning { border-color: var(--cp-warning); }
+    summary { cursor: pointer; font-weight: 600; padding-bottom: 12px; }
+    #error { color: var(--cp-danger); }
+    [hidden] { display: none !important; }
+    @media (max-width: 800px) { .grid { grid-template-columns: 1fr; } main { padding: 16px; } }
+  </style>
+</head>
+<body>
+<main>
+  <div class="eyebrow">HARNESS ENGINEERING / A SMALL SWE DEMO</div>
+  <h1>Agent says done. But is it really done?</h1>
+  <p class="muted">One shopping-cart bug. Same starting code and task. Two execution setups.</p>
+  <p class="notice" id="provider-note">REPLAY MODE: model actions are scripted, not a live LLM.
+    File edits, protected-file checks and regression tests are real.</p>
+  <section class="card">
+    <h2>The task</h2>
+    <p>Shipping is free at <strong>INR 1,000 and above</strong>; below that it costs INR 50.
+      Empty carts total zero. Negative prices are invalid.
+      The buggy app charges <strong>INR 1,050</strong> for an INR 1,000 order.</p>
+    <div class="flow" aria-label="Engineered harness flow">
+      <span>Harness supplies context</span><span>Model proposes action</span>
+      <span>Harness executes allowed tool</span><span>Harness tests</span>
+      <span>Feedback / completion gate</span>
+    </div>
+  </section>
+  <section class="card">
+    <h2>Run in this order</h2>
+    <div class="controls">
+      <label for="provider">Model provider:</label>
+      <select id="provider">
+        <option value="replay">Replay - no setup required</option>
+        <option value="ollama">Live local Ollama - setup required</option>
+      </select>
+      <button id="bug">1. Show original bug</button>
+      <button id="basic">2. Minimal harness</button>
+      <button id="engineered" class="primary">3. Engineered harness</button>
+      <button id="reset">Clear screen</button>
+    </div>
+    <p class="muted">Every run uses a fresh temporary copy. Your project files are not changed.
+      Minimal mode skips verification; both modes enforce the same safe demo edit limits.</p>
+    <details>
+      <summary>Extra: controlled harness failure scenarios (replay only)</summary>
+      <div class="controls">
+        <button id="repair">Inject faulty patch + repair</button>
+        <button id="blocked">Try editing protected tests</button>
+        <button id="budget">Exhaust 3-attempt budget</button>
+      </div>
+      <p class="muted">These are labelled test fixtures, not evidence that a model naturally failed.</p>
+    </details>
+    <p id="error" role="alert"></p>
+    <p id="busy" role="status" hidden>Executing real tools and collecting results. Live inference may take a minute...</p>
+  </section>
+  <section id="results" hidden aria-live="polite">
+    <div class="card">
+      <p id="status" class="status"></p>
+      <p id="verdict"></p>
+    </div>
+    <div class="grid">
+      <section class="card"><h2>Original cart.py</h2><pre id="before"></pre></section>
+      <section class="card"><h2>After this run</h2><pre id="after"></pre></section>
+    </div>
+    <section class="card"><h2>Code diff</h2><pre id="diff"></pre></section>
+    <section class="card"><h2>Test evidence</h2><pre id="checks"></pre></section>
+    <section class="card"><h2>Completed execution trace</h2>
+      <p class="muted">Actual events from the completed run, in order. This is not a live-stream animation.</p>
+      <div id="trace"></div>
+    </section>
+  </section>
+</main>
+<script>
+  const $ = id => document.getElementById(id);
+  const buttons = [...document.querySelectorAll("button")];
+  let busy = false;
+  function syncControls() {
+    buttons.forEach(button => { button.disabled = busy; });
+    $("provider").disabled = busy;
+    if (!busy && $("provider").value !== "replay") {
+      ["repair", "blocked", "budget"].forEach(id => { $(id).disabled = true; });
+    }
+  }
+  $("provider").addEventListener("change", () => {
+    $("provider-note").textContent = $("provider").value === "replay"
+      ? "REPLAY MODE: model actions are scripted, not a live LLM. File edits, protected-file checks and regression tests are real."
+      : "LIVE MODE: demo context goes only to a local Ollama model. Start Ollama and set OLLAMA_MODEL before launching the server. Model outcomes are not guaranteed.";
+    syncControls();
+  });
+  async function run(mode, scenario = "happy", bug = false) {
+    busy = true;
+    syncControls();
+    $("error").textContent = "";
+    $("busy").hidden = false;
+    $("results").hidden = true;
+    try {
+      const response = await fetch(bug ? "/api/bug" : "/api/run", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mode, scenario, provider: $("provider").value })
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Request failed");
+      $("status").textContent = result.status;
+      $("status").className = "status " + (result.status === "Checks passed" ? "success" : "");
+      $("verdict").textContent = result.status === "Checks passed"
+        ? `All 6 specified tests passed after ${result.patch_attempts} patch attempt(s). This is scoped verification, not a guarantee of no bugs.`
+        : result.status === "Unverified"
+          ? "Model requested completion. No tests were run. The patch may be correct, but this run has no verification evidence."
+          : "Inspect the trace below. Failed or blocked work is not reported as verified.";
+      $("before").textContent = result.before;
+      $("after").textContent = result.after;
+      $("diff").textContent = result.diff || "No code change.";
+      $("checks").textContent = result.checks ? result.checks.output : "NOT RUN - no test evidence.";
+      $("trace").replaceChildren();
+      result.events.forEach((event, index) => {
+        const item = document.createElement("details");
+        item.className = "trace " + event.kind;
+        item.open = true;
+        const title = document.createElement("summary");
+        title.textContent = `${index + 1}. ${event.title}`;
+        const content = document.createElement("pre");
+        content.textContent = event.detail;
+        item.append(title, content);
+        $("trace").append(item);
+      });
+      $("results").hidden = false;
+    } catch (error) {
+      $("error").textContent = error.message;
+    } finally {
+      busy = false;
+      $("busy").hidden = true;
+      syncControls();
+    }
+  }
+  $("bug").onclick = () => run("basic", "happy", true);
+  $("basic").onclick = () => run("basic");
+  $("engineered").onclick = () => run("engineered");
+  ["repair", "blocked", "budget"].forEach(id => {
+    $(id).onclick = () => run("engineered", id);
+  });
+  $("reset").onclick = () => {
+    $("results").hidden = true;
+    $("error").textContent = "";
+  };
+</script>
+</body>
+</html>
